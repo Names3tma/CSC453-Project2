@@ -1,6 +1,7 @@
 #ifndef LWPH
 #define LWPH
 #include <sys/types.h>
+#include <stdlib.h>
 
 #ifndef TRUE
 #define TRUE 1
