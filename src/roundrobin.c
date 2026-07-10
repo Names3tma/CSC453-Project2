@@ -17,7 +17,7 @@ void rr_admit(thread new)
 		tail->sched_one= new;
 		new->sched_two = tail;
 		new->sched_one = head;
-		new->sched_two = tail;
+		head->sched_two = new;
 	}
 	num_threads++;
 }

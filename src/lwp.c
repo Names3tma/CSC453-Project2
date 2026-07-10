@@ -52,12 +52,13 @@ void add_lib_list(thread new)
 tid_t lwp_create(lwpfun function, void *argument)
 {
 	thread new = malloc(sizeof(context));
-	long page_size; 
+	long page_size; // block of memory
 	size_t howbig;
 	struct rlimit rl;
 
-	// finding stack size
 	page_size = sysconf(_SC_PAGE_SIZE);	
+	
+	// finds the stack size
 	if (getrlimit(RLIMIT_STACK, &rl) == 0 && rl.rlim_cur != RLIM_INFINITY) 
 	{
 		howbig = rl.rlim_cur;
@@ -66,7 +67,7 @@ tid_t lwp_create(lwpfun function, void *argument)
 	{
 		howbig = 8 * 1024 * 1024; // default value
 	}
-	howbig = (howbig + page_size - 1) / page_size * page_size; // round up
+	howbig = (howbig + page_size - 1) / page_size * page_size; // round up(mmap is why)
 	// stack initialization, read and write but no execute
 	new->stack = mmap(NULL, howbig, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS|MAP_STACK, -1, 0);
 	if (new->stack == MAP_FAILED)
@@ -139,6 +140,7 @@ thread tid2thread(tid_t tid)
 	return NULL;
 }
 
+// similar to like next
 void lwp_yield(void)
 {
 	thread old = current_thread;
@@ -147,13 +149,14 @@ void lwp_yield(void)
 	if (next == NULL) {exit(LWPTERMSTAT(old->status));} // exit with old status, from spec
 
 	current_thread = next;
-	swap_rfiles(&old->state, &next->state);
+	swap_rfiles(&old->state, &next->state); // MOVE register
 }
 
 void lwp_start(void)
 {
 	thread start = malloc(sizeof(context));
 	
+	// empty thread that gets assigned values at lwp_yield
 	start->tid = next_tid++;
 	start->stacksize = 0;
 	start->status = MKTERMSTAT(LWP_LIVE, 0);
